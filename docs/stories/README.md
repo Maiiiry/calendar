@@ -35,4 +35,5 @@ Front matter: `status` (`planned`, `in-progress` or `implemented`), `date` (`YYY
 | [0011](0011-review-the-top-level-task-runner.md) | Review the top-level task runner | implemented |
 | [0012](0012-architecture-visualization-on-the-documentation-site.md) | Architecture visualization on the documentation site | implemented |
 | [0013](0013-derive-the-decision-log-from-the-adr-files.md) | Derive the decision log from the ADR files | implemented |
+| [0014](0014-supersede-adr-0014-drop-sqlite-fallback.md) | Supersede ADR-0014: drop the SQLite fallback | implemented |
 | [XXXX](XXXX-create-events-and-tasks-from-week-view.md) | Create events and tasks from the week view | planned |
