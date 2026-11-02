@@ -33,7 +33,7 @@ A first machine-readable model of the whole system was drafted locally in FINOS 
   * the non-functional controls (authentication, least-privilege data access, time correctness, read consistency, concurrency, request limits, observability, secrets, durability, query and client performance, accessibility) shown on the elements they apply to;
   * a link from every element to the ADRs it depends on, using the stable `adr/NNNN/` routes, and from each flow to its story card.
 * **Validation is a gate.** The model is validated in `just check` and in CI, and the docs build fails on an invalid model (a schema error, a dangling reference, an ADR number that does not exist). The tool is pinned like the rest of the toolchain ([ADR-0010](../decisions/0010-toolchain-version-pins.md)); if it is a separate binary, `just doctor` checks it.
-* **An ADR chooses the tooling.** [ADR-0039](../decisions/0039-architecture-model-and-visualization-tooling.md) weighs at least FINOS CALM, C4 with the Structurizr DSL, hand-written Mermaid in Markdown, LikeC4 and PlantUML or D2 against four drivers: a validatable model rather than pictures, traceability to ADRs and non-functional requirements, fit with the pinned toolchain, and rendering inside the Starlight site. It is drafted as a neutral comparison and becomes `accepted` when the maintainer approves it, in that same PR before it merges.
+* **An ADR chooses the tooling.** [ADR-0039](../decisions/0039-architecture-model-and-visualization-tooling.md) weighs at least FINOS CALM, C4 with the Structurizr DSL, hand-written Mermaid in Markdown, LikeC4 and PlantUML or D2 against four drivers: a validatable model rather than pictures, traceability to ADRs and non-functional requirements, fit with the pinned toolchain, and rendering inside the Starlight site. It was drafted as a neutral comparison and accepted in PR 0 when the maintainer chose FINOS CALM.
 
 ### Not in this story
 
@@ -71,9 +71,9 @@ A first machine-readable model of the whole system was drafted locally in FINOS 
 | [0023](../decisions/0023-static-adr-log-publication.md) | Static site built from the canonical Markdown, published from `main` | The model lives in the repository and the site is built from it; the `adr/NNNN/` routes are the link targets. |
 | [0025](../decisions/0025-github-pages-pr-previews.md) | Pull-request previews of the site | A model change is reviewed on its preview. |
 | [0028](../decisions/0028-publish-user-stories-on-the-documentation-site.md) | Stories published with the ADRs | Flows link to story cards at `stories/NNNN/`. |
-| [0039](../decisions/0039-architecture-model-and-visualization-tooling.md) | Architecture model and visualization tooling | Chooses the tool this story implements; drafted in PR 0, accepted on approval. |
+| [0039](../decisions/0039-architecture-model-and-visualization-tooling.md) | FINOS CALM for the architecture model and its visualization | Chooses the tool this story implements: a CALM 1.3 model validated by `calm validate --strict` in `just lint`, rendered by a loader in the docs app with browser-side Mermaid. |
 
-[ADR-0039](../decisions/0039-architecture-model-and-visualization-tooling.md) is the new ADR this story needs. It is drafted with the `adr-draft` skill in the same PR as this card.
+[ADR-0039](../decisions/0039-architecture-model-and-visualization-tooling.md) is the new ADR this story needed. It was drafted with the `adr-draft` skill in the same PR as this card and accepted there.
 
 ### Other decisions (not ADR-worthy)
 
