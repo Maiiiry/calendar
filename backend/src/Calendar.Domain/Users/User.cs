@@ -59,8 +59,9 @@ public sealed class User
   }
 
   /// <summary>
-  /// Records a sign-in (or a seed resolution): refreshes the email and profile, fills in the subject when it
-  /// is known and missing, and stamps <see cref="LastSignedInAt"/>. A row that already has a subject keeps it.
+  /// Records a sign-in (or a seed resolution): refreshes the email, replaces the profile values that are given
+  /// (a <c>null</c> keeps the current one), fills in the subject when it is known and missing, and stamps
+  /// <see cref="LastSignedInAt"/>. A row that already has a subject keeps it.
   /// </summary>
   public void SignIn(
     DateTimeOffset now,
@@ -77,8 +78,8 @@ public sealed class User
 
     GoogleSubject ??= NormalizeOptional(googleSubject);
     Email = normalizedEmail;
-    DisplayName = NormalizeOptional(displayName);
-    PictureUrl = NormalizeOptional(pictureUrl);
+    DisplayName = NormalizeOptional(displayName) ?? DisplayName;
+    PictureUrl = NormalizeOptional(pictureUrl) ?? PictureUrl;
     LastSignedInAt = now.ToUniversalTime();
   }
 

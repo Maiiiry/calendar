@@ -16,9 +16,32 @@ public sealed class SchemaTests(PostgresFixture postgres) : ApiTestBase(postgres
     var definition = await db.Database.SqlQuery<string>(
         $"SELECT indexdef AS \"Value\" FROM pg_indexes WHERE tablename = 'tasks' AND indexname = {indexName}").SingleAsync(Ct);
 
-    definition.ShouldContain($"({column})");
+    // ADR-0041: the owner leads, since every task query is scoped to one owner first.
+    definition.ShouldContain($"(owner_id, {column})");
     definition.ShouldContain($"({column} IS NOT NULL)");
     definition.ShouldContain("(completed_at IS NULL)");
+  }
+
+  [Theory]
+  [InlineData("events", "fk_events_owner")]
+  [InlineData("tasks", "fk_tasks_owner")]
+  public async Task OwnerId_IsANonNullForeignKeyToUsers(string table, string constraint)
+  {
+    await using CalendarDbContext db = Postgres.Database.CreateMigratorContext();
+
+    var nullable = await db.Database.SqlQuery<string>(
+        $"SELECT is_nullable AS \"Value\" FROM information_schema.columns WHERE table_name = {table} AND column_name = 'owner_id'").SingleAsync(Ct);
+    nullable.ShouldBe("NO");
+
+    var definition = await db.Database.SqlQuery<string>(
+        $"SELECT pg_get_constraintdef(oid) AS \"Value\" FROM pg_constraint WHERE conname = {constraint}").SingleAsync(Ct);
+    definition.ShouldBe("FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE RESTRICT");
+
+    PostgresException ex = await Should.ThrowAsync<PostgresException>(async () => await db.Database.ExecuteSqlRawAsync(
+        $"INSERT INTO {table} (id, owner_id, title, is_all_day, start_date, end_date) "
+        + "VALUES (gen_random_uuid(), gen_random_uuid(), 'orphan', true, '2026-10-26', '2026-10-27')",
+        Ct));
+    ex.SqlState.ShouldBeOneOf(PostgresErrorCodes.ForeignKeyViolation, PostgresErrorCodes.UndefinedColumn);
   }
 
   [Fact]
@@ -27,7 +50,7 @@ public sealed class SchemaTests(PostgresFixture postgres) : ApiTestBase(postgres
     await using CalendarDbContext db = Postgres.Database.CreateMigratorContext();
 
     PostgresException ex = await Should.ThrowAsync<PostgresException>(async () => await db.Database.ExecuteSqlRawAsync(
-        "INSERT INTO tasks (id, title, due_date, due_at) VALUES (gen_random_uuid(), 't', '2026-10-26', now())",
+        $"INSERT INTO tasks (id, owner_id, title, due_date, due_at) VALUES (gen_random_uuid(), '{UserA}', 't', '2026-10-26', now())",
         Ct));
 
     ex.SqlState.ShouldBe(PostgresErrorCodes.CheckViolation);
@@ -47,7 +70,7 @@ public sealed class SchemaTests(PostgresFixture postgres) : ApiTestBase(postgres
 
 #pragma warning disable EF1003 // values are fixed literals from the InlineData above, not user input
     PostgresException ex = await Should.ThrowAsync<PostgresException>(async () => await db.Database.ExecuteSqlRawAsync(
-        "INSERT INTO events (id, title, is_all_day, starts_at, ends_at, time_zone_id, start_date, end_date) VALUES " + values,
+        $"INSERT INTO events (id, owner_id, title, is_all_day, starts_at, ends_at, time_zone_id, start_date, end_date) VALUES ('{UserA}', " + values,
         Ct));
 #pragma warning restore EF1003
 
