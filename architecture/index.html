@@ -75,13 +75,17 @@
 <h2 id="system-context">System context</h2>
 <p>Who uses the calendar and which outside services it depends on. Everything inside the calendar system is drawn as one box, and the Azure resources of one environment as another; relationships between their parts are collapsed onto the boxes.</p>
 <pre class="mermaid">flowchart LR
-  user([Calendar user])
-  operator([Maintainer / operator])
-  calendar_system["Calendar system"]
-  google_identity["Google Identity #40;OpenID Connect#41;"]
-  github_actions["GitHub Actions #40;CI/CD#41;"]
-  github_pages["GitHub Pages"]
-  azure_resource_group["Azure resource group #40;per environment#41;"]
+  classDef person fill:#fde68a,stroke:#b45309,color:#1f2937
+  classDef ours fill:#bfdbfe,stroke:#1d4ed8,color:#1f2937
+  classDef platform fill:#ddd6fe,stroke:#6d28d9,color:#1f2937
+  classDef external fill:#e5e7eb,stroke:#6b7280,color:#1f2937,stroke-dasharray:4 2
+  user([Calendar user]):::person
+  operator([Maintainer / operator]):::person
+  calendar_system["Calendar system"]:::ours
+  google_identity["Google Identity #40;OpenID Connect#41;"]:::external
+  github_actions["GitHub Actions #40;CI/CD#41;"]:::platform
+  github_pages["GitHub Pages"]:::platform
+  azure_resource_group["Azure resource group #40;per environment#41;"]:::platform
   user -->|"Signs in and plans the day and week with"| calendar_system
   operator -->|"Merges changes, dispatches migrations…"| github_actions
   operator -->|"Merges changes, dispatches migrations…"| calendar_system
@@ -90,6 +94,7 @@
   github_actions -->|"Runs on manual dispatch for a chosen…"| calendar_system
   github_actions -->|"Builds from the Dockerfile and…"| azure_resource_group
   github_actions -->|"Builds the verified adr-site artifact in…"| github_pages</pre>
+<p>Legend: <span aria-hidden="true" style="display:inline-block;width:.9em;height:.9em;vertical-align:-.1em;border-radius:2px;background:#fde68a;border:1px solid #b45309"></span> Person · <span aria-hidden="true" style="display:inline-block;width:.9em;height:.9em;vertical-align:-.1em;border-radius:2px;background:#bfdbfe;border:1px solid #1d4ed8"></span> Built in this repository · <span aria-hidden="true" style="display:inline-block;width:.9em;height:.9em;vertical-align:-.1em;border-radius:2px;background:#ddd6fe;border:1px solid #6d28d9"></span> Hosting and tooling we configure · <span aria-hidden="true" style="display:inline-block;width:.9em;height:.9em;vertical-align:-.1em;border-radius:2px;background:#e5e7eb;border:1px dashed #6b7280"></span> External service we only use</p>
 <h3 id="elements">Elements</h3>
 
 
@@ -136,7 +141,15 @@
 
 
 
-<table><thead><tr><th>Element</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td><a href="/calendar/architecture/components/user/">Calendar user</a></td><td>actor</td><td>A person whose verified Google email is on the allow-list. Uses the web app in a browser to see today and the week, add events and tasks, tick tasks off and triage overdue tasks.</td></tr><tr><td><a href="/calendar/architecture/components/operator/">Maintainer / operator</a></td><td>actor</td><td>The repository owner who merges pull requests, deploys infrastructure with the infra tool, initialises secrets and roles, runs database migrations and approves production deployments.</td></tr><tr><td><a href="/calendar/architecture/components/calendar-system/">Calendar system</a></td><td>system</td><td>The whole product: web app, API, generated client, contract, database, migrator and documentation site, all developed in the single repository mgasca/calendar.</td></tr><tr><td><a href="/calendar/architecture/components/google-identity/">Google Identity (OpenID Connect)</a></td><td>system</td><td>External identity provider. The API runs the OpenID Connect authorization-code flow against it; the browser is redirected to Google to sign in and back to the API callback with a code.</td></tr><tr><td><a href="/calendar/architecture/components/github-actions/">GitHub Actions (CI/CD)</a></td><td>service</td><td>Workflows in .github/workflows: CI (backend, frontend, tooling, container image + smoke test, ‘CI result’), CodeQL, dependency review, Infrastructure preview (Bicep what-if), Azure OIDC check, Database migration (manual, per environment, OIDC login) and Publish ADR site (trusted workflow_run publisher for production and PR previews).</td></tr><tr><td><a href="/calendar/architecture/components/github-pages/">GitHub Pages</a></td><td>system</td><td>Static hosting for the documentation site. A gh-pages state branch retains production at the root and previews under pr-preview/; only the trusted publish job (github-pages environment) has deploy permissions and publications are serialized.</td></tr><tr><td><a href="/calendar/architecture/components/azure-resource-group/">Azure resource group (per environment)</a></td><td>system</td><td>One resource group per environment (staging, production) in UK South, deployed with Bicep (infra/main.bicep): monitoring, foundation (registry, vaults, identity, role assignments), database and app modules. Resource groups alone are not a security boundary: identities and role assignments are scoped per environment too.</td></tr></tbody></table>
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Element</th><th>Type</th><th>Ownership</th><th>Description</th></tr></thead><tbody><tr><td><a href="/calendar/architecture/components/user/">Calendar user</a></td><td>actor</td><td>Person</td><td>A person whose verified Google email is on the allow-list. Uses the web app in a browser to see today and the week, add events and tasks, tick tasks off and triage overdue tasks.</td></tr><tr><td><a href="/calendar/architecture/components/operator/">Maintainer / operator</a></td><td>actor</td><td>Person</td><td>The repository owner who merges pull requests, deploys infrastructure with the infra tool, initialises secrets and roles, runs database migrations and approves production deployments.</td></tr><tr><td><a href="/calendar/architecture/components/calendar-system/">Calendar system</a></td><td>system</td><td>Built in this repository</td><td>The whole product: web app, API, generated client, contract, database, migrator and documentation site, all developed in the single repository mgasca/calendar.</td></tr><tr><td><a href="/calendar/architecture/components/google-identity/">Google Identity (OpenID Connect)</a></td><td>system</td><td>External service we only use</td><td>External identity provider. The API runs the OpenID Connect authorization-code flow against it; the browser is redirected to Google to sign in and back to the API callback with a code.</td></tr><tr><td><a href="/calendar/architecture/components/github-actions/">GitHub Actions (CI/CD)</a></td><td>service</td><td>Hosting and tooling we configure</td><td>Workflows in .github/workflows: CI (backend, frontend, tooling, container image + smoke test, ‘CI result’), CodeQL, dependency review, Infrastructure preview (Bicep what-if), Azure OIDC check, Database migration (manual, per environment, OIDC login) and Publish ADR site (trusted workflow_run publisher for production and PR previews).</td></tr><tr><td><a href="/calendar/architecture/components/github-pages/">GitHub Pages</a></td><td>system</td><td>Hosting and tooling we configure</td><td>Static hosting for the documentation site. A gh-pages state branch retains production at the root and previews under pr-preview/; only the trusted publish job (github-pages environment) has deploy permissions and publications are serialized.</td></tr><tr><td><a href="/calendar/architecture/components/azure-resource-group/">Azure resource group (per environment)</a></td><td>system</td><td>Hosting and tooling we configure</td><td>One resource group per environment (staging, production) in UK South, deployed with Bicep (infra/main.bicep): monitoring, foundation (registry, vaults, identity, role assignments), database and app modules. Resource groups alone are not a security boundary: identities and role assignments are scoped per environment too.</td></tr></tbody></table>
 <h3 id="relationships">Relationships</h3>
 
 
