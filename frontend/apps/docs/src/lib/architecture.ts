@@ -566,15 +566,19 @@ function shape(node: ModelNode): string {
   }
 }
 
-function cell(value: string): string {
-  return value.replace(/\|/g, '\\|').replace(/\n/g, ' ');
+/**
+ * Escapes text for a Markdown table cell. Backslashes go first, so a backslash before a pipe in the
+ * input cannot turn the pipe's escape back into a cell separator; newlines would end the row.
+ */
+export function escapeCell(value: string): string {
+  return value.replace(/\\/g, '\\\\').replace(/\|/g, '\\|').replace(/\n/g, ' ');
 }
 
 function table(header: string[], rows: string[][]): string {
   return [
     `| ${header.join(' | ')} |`,
     `| ${header.map(() => '---').join(' | ')} |`,
-    ...rows.map((row) => `| ${row.map(cell).join(' | ')} |`),
+    ...rows.map((row) => `| ${row.map(escapeCell).join(' | ')} |`),
   ].join('\n');
 }
 

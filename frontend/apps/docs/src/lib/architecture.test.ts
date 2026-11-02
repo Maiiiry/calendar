@@ -7,6 +7,7 @@ import {
   architecturePages,
   architectureSidebar,
   checkArchitecture,
+  escapeCell,
   mermaidText,
   pagePath,
   pageRoute,
@@ -403,6 +404,11 @@ describe('diagram text', () => {
   });
   it('escapes the characters Mermaid reads as syntax', () => {
     expect(mermaidText('a; (b) <c> "d" #1')).toBe('a#59; #40;b#41; #lt;c#gt; #quot;d#quot; #35;1');
+  });
+  it('escapes backslashes before pipes in a table cell, and flattens newlines', () => {
+    expect(escapeCell('a|b\\c\nd')).toBe('a\\|b\\\\c d');
+    // A backslash before a pipe must not survive as an escape of the pipe's own escape.
+    expect(escapeCell('x\\|y')).toBe('x\\\\\\|y');
   });
   it('renders configuration as nested bullets', () => {
     expect(
