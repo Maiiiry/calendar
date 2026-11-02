@@ -1,7 +1,8 @@
-import { readdir, readFile } from 'node:fs/promises';
+import { access, readdir, readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { relative, resolve } from 'node:path';
 import type { Loader } from 'astro/loaders';
+import type { Adr, Story } from './adr';
 import {
   parseLog,
   parseStories,
@@ -10,6 +11,18 @@ import {
   storySlug,
   storyStatusCategory,
 } from './adr';
+import type { Architecture } from './architecture';
+import {
+  architectureDirectory,
+  architecturePages,
+  checkArchitecture,
+  mappingFile,
+  modelEditUrl,
+  modelFile,
+  pagePath,
+  pageRoute,
+  parseArchitecture,
+} from './architecture';
 
 export const decisionsDirectory = new URL('../../../../../docs/decisions/', import.meta.url);
 export const storiesDirectory = new URL('../../../../../docs/stories/', import.meta.url);
@@ -35,13 +48,37 @@ export async function readStories(adrs: Map<string, string>) {
   return { index, records: parseStories(index, sources, adrs) };
 }
 
-/** Reads and validates both collections together, since stories reference ADR numbers. */
+/**
+ * Reads the CALM model (ADR-0039) and checks its references against the decision log and the
+ * stories. `url-mapping.json` must map every control requirement URL to a schema that exists.
+ */
+export async function readArchitecture(adrs: Adr[], stories: Story[]): Promise<Architecture> {
+  const source = await readFile(new URL(modelFile, architectureDirectory), 'utf8');
+  const mapping: unknown = JSON.parse(
+    await readFile(new URL(mappingFile, architectureDirectory), 'utf8'),
+  );
+  if (typeof mapping !== 'object' || mapping === null || Array.isArray(mapping)) {
+    throw new Error(`${mappingFile} must be an object`);
+  }
+  const mappedUrls = new Set<string>();
+  for (const [url, path] of Object.entries(mapping as Record<string, unknown>)) {
+    if (typeof path !== 'string') throw new Error(`${mappingFile}: ${url} must map to a path`);
+    await access(new URL(path, architectureDirectory));
+    mappedUrls.add(url);
+  }
+  const architecture = parseArchitecture(source);
+  checkArchitecture(architecture, { adrs, stories, mappedUrls });
+  return architecture;
+}
+
+/** Reads and validates all collections together, since stories and the model reference ADR numbers. */
 export async function readDocuments() {
   const adr = await readLog();
   const story = await readStories(
     new Map(adr.records.map((record) => [record.number, record.file])),
   );
-  return { adr, story };
+  const architecture = await readArchitecture(adr.records, story.records);
+  return { adr, story, architecture };
 }
 
 /**
@@ -49,7 +86,7 @@ export async function readDocuments() {
  * The remark plugin uses this to turn links between ADRs, stories and indexes into site routes.
  */
 export async function documentRoutes() {
-  const { adr, story } = await readDocuments();
+  const { adr, story, architecture } = await readDocuments();
   const routes = new Map([
     ['docs/decisions/README.md', ''],
     ['docs/stories/README.md', 'stories/'],
@@ -58,6 +95,9 @@ export async function documentRoutes() {
     routes.set(`docs/decisions/${record.file}`, `adr/${record.number}/`);
   for (const record of story.records) {
     routes.set(`docs/stories/${record.file}`, `stories/${storySlug(record.file)}/`);
+  }
+  for (const page of architecturePages(architecture, { stories: story.records })) {
+    routes.set(pagePath(page.id), pageRoute(page.id));
   }
   return routes;
 }
@@ -74,7 +114,7 @@ export function docsLoader(): Loader {
     name: 'canonical-docs',
     async load(context) {
       const sync = async () => {
-        const { adr, story } = await readDocuments();
+        const { adr, story, architecture } = await readDocuments();
         const adrFiles = new Map(adr.records.map((record) => [record.number, record.file]));
         context.store.clear();
         const entries = [
@@ -150,16 +190,24 @@ export function docsLoader(): Loader {
               },
             },
           })),
+          // Architecture pages are rendered from the model; links in them resolve from its directory.
+          ...architecturePages(architecture, { stories: story.records }).map((page) => ({
+            id: page.id,
+            title: page.title,
+            body: page.body,
+            directory: architectureDirectory,
+            file: modelFile,
+            sidebar: page.sidebar,
+          })),
         ];
         for (const entry of entries) {
-          const isStory = entry.directory === storiesDirectory;
+          const editUrl =
+            entry.directory === architectureDirectory
+              ? modelEditUrl
+              : `${repository}/edit/main/docs/${entry.directory === storiesDirectory ? 'stories' : 'decisions'}/${entry.file}`;
           const data = await context.parseData({
             id: entry.id,
-            data: {
-              title: entry.title,
-              sidebar: entry.sidebar,
-              editUrl: `${repository}/edit/main/docs/${isStory ? 'stories' : 'decisions'}/${entry.file}`,
-            },
+            data: { title: entry.title, sidebar: entry.sidebar, editUrl },
           });
           const fileURL = new URL(entry.file, entry.directory);
           context.store.set({
@@ -174,7 +222,9 @@ export function docsLoader(): Loader {
       };
       await sync();
       if (context.watcher) {
-        const directories = [decisionsDirectory, storiesDirectory].map((url) => fileURLToPath(url));
+        const directories = [decisionsDirectory, storiesDirectory, architectureDirectory].map(
+          (url) => fileURLToPath(url),
+        );
         for (const directory of directories) context.watcher.add(directory);
         let pending = Promise.resolve();
         const reload = (path: string) => {
