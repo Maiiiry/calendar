@@ -4,6 +4,7 @@ date: 2026-11-02
 issue: https://github.com/mgasca/calendar/issues/178
 pr:
   - https://github.com/mgasca/calendar/pull/179
+  - https://github.com/mgasca/calendar/pull/180
 adrs: ["0000", "0010", "0017", "0022", "0023", "0025", "0028", "0039"]
 ---
 
@@ -13,7 +14,7 @@ adrs: ["0000", "0010", "0017", "0022", "0023", "0025", "0028", "0039"]
 
 > As a contributor, whether a person or another agent, I need an **Architecture** section on the documentation site that shows the system's parts, how they connect, the business flows that cross them and the non-functional controls they carry, each linked to the ADRs behind it, so that I can understand the system from one place and trust that the pictures match the code and the decisions.
 
-Tracked in issue #178. Card PR: [#179](https://github.com/mgasca/calendar/pull/179).
+Tracked in issue #178. Card and ADR PR: [#179](https://github.com/mgasca/calendar/pull/179); implementation PR: [#180](https://github.com/mgasca/calendar/pull/180).
 
 ## Background
 
