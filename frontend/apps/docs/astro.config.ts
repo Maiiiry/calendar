@@ -1,11 +1,23 @@
+import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import { unified } from '@astrojs/markdown-remark';
+import mermaid from 'astro-mermaid';
 import { deployment, remarkDocLinks, repository } from './src/lib/adr';
+import {
+  architectureDirectory,
+  architectureSidebar,
+  modelFile,
+  parseArchitecture,
+} from './src/lib/architecture';
 import { documentRoutes } from './src/lib/docs-loader';
 
 const { site, base } = deployment(process.env.DOCS_SITE_URL);
+// The flows become sidebar entries, so the model is read once here; the loader validates it.
+const { flows } = parseArchitecture(
+  readFileSync(new URL(modelFile, architectureDirectory), 'utf8'),
+);
 export default defineConfig({
   site,
   base,
@@ -25,6 +37,8 @@ export default defineConfig({
     }),
   },
   integrations: [
+    // Renders ```mermaid blocks in the browser (ADR-0039); it must register before Starlight.
+    mermaid({ autoTheme: true, enableLog: false }),
     starlight({
       title: 'Calendar · Docs',
       description:
@@ -44,6 +58,7 @@ export default defineConfig({
             { autogenerate: { directory: '../../../docs/stories' } },
           ],
         },
+        { label: 'Architecture', items: architectureSidebar(flows) },
       ],
     }),
   ],

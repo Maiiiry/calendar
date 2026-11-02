@@ -2,6 +2,7 @@ import { access, readFile, readdir, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { deployment, storySlug } from '../src/lib/adr';
+import { architecturePages, pageRoute } from '../src/lib/architecture';
 import { readDocuments } from '../src/lib/docs-loader';
 
 const { base } = deployment(process.env.DOCS_SITE_URL);
@@ -111,6 +112,50 @@ describe('published user stories', () => {
       for (const url of record.pr) expect(html).toContain(`href="${url}"`);
       for (const adr of record.adrs) {
         expect(html).toContain(`href="${base}adr/${adr}/"`);
+      }
+    }
+  });
+});
+
+describe('published architecture', () => {
+  it('renders every page from the model with a diagram, its text table and links to decisions and stories', async () => {
+    const { architecture, story } = await readDocuments();
+    const pages = architecturePages(architecture, { stories: story.records });
+    const overview = await readFile('dist/architecture/index.html', 'utf8');
+    for (const slug of [
+      'architecture/containers',
+      'architecture/components',
+      'architecture/controls',
+    ]) {
+      expect(overview).toContain(`href="${base}${slug}/"`);
+    }
+    for (const page of pages) {
+      const html = await readFile(`dist/${pageRoute(page.id)}index.html`, 'utf8');
+      expect(html).toMatch(/<h1[^>]*>/);
+      const routes = sidebarRoutes(html);
+      expect(routes).toContain(`${base}architecture/`);
+      for (const flow of architecture.flows)
+        expect(routes).toContain(`${base}architecture/flows/${flow.id}/`);
+      // Component pages stay out of the sidebar; everything else in the section is listed.
+      expect(routes.includes(`${base}${pageRoute(page.id)}`)).toBe(!page.sidebar.hidden);
+      if (page.body.includes('```mermaid')) {
+        expect(html, page.id).toContain('<pre class="mermaid">');
+        expect(html, page.id).toContain('<table');
+      }
+    }
+    const stories = new Map(architecture.stories.map((item) => [item.id, item.url]));
+    for (const node of architecture.nodes) {
+      const html = await readFile(`dist/architecture/components/${node.id}/index.html`, 'utf8');
+      for (const id of node.adrs)
+        expect(html, node.id).toContain(`href="${base}adr/${id.slice('ADR-'.length)}/"`);
+    }
+    for (const flow of architecture.flows) {
+      const html = await readFile(`dist/architecture/flows/${flow.id}/index.html`, 'utf8');
+      for (const id of flow.adrs)
+        expect(html, flow.id).toContain(`href="${base}adr/${id.slice('ADR-'.length)}/"`);
+      for (const id of flow.stories) {
+        const slug = /\/stories\/([^/]+)\/$/.exec(stories.get(id) ?? '')?.[1] ?? '';
+        expect(html, flow.id).toContain(`href="${base}stories/${slug}/"`);
       }
     }
   });

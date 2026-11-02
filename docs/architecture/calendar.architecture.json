@@ -12,6 +12,18 @@
     "adr-url-pattern": "https://mgasca.github.io/calendar/adr/NNNN/ (stable numeric routes, ADR-0023); source at docs/decisions/NNNN-*.md",
     "story-url-pattern": "https://mgasca.github.io/calendar/stories/NNNN/ (ADR-0028); source at docs/stories/NNNN-*.md",
     "environments": ["local (Docker Compose)", "staging (Azure, UK South)", "production (Azure, UK South)"],
+    "views": {
+      "context": {
+        "title": "System context",
+        "description": "Who uses the calendar and which outside services it depends on. Everything inside the calendar system is drawn as one box, and the Azure resources of one environment as another; relationships between their parts are collapsed onto the boxes.",
+        "nodes": ["user", "operator", "calendar-system", "google-identity", "github-actions", "github-pages", "azure-resource-group"]
+      },
+      "containers": {
+        "title": "Containers and deployment",
+        "description": "The parts that run, where they run and how they connect: the single container image in the Container Apps environment of a per-environment resource group, the database, the migrator, the tooling around them and the documentation site.",
+        "nodes": ["user", "operator", "google-identity", "web-app", "api-client", "openapi-contract", "calendar-api", "calendar-container", "container-apps-environment", "calendar-db", "db-migrator", "infra-tool", "github-actions", "container-registry", "azure-key-vault-app", "azure-key-vault-ops", "log-analytics", "azure-resource-group", "decision-log", "docs-site", "github-pages"]
+      }
+    },
     "adrs": [
       { "id": "ADR-0000", "title": "Use Markdown Architectural Decision Records", "status": "accepted", "file": "docs/decisions/0000-use-markdown-architectural-decision-records.md", "url": "https://mgasca.github.io/calendar/adr/0000/" },
       { "id": "ADR-0001", "title": "Single repository with per-stack top-level directories", "status": "accepted", "file": "docs/decisions/0001-monorepo-layout.md", "url": "https://mgasca.github.io/calendar/adr/0001/" },
@@ -30,9 +42,9 @@
       { "id": "ADR-0014", "title": "PostgreSQL as the database engine, with SQLite on a volume as a budget fallback", "status": "superseded", "superseded-by": "ADR-0037", "file": "docs/decisions/0014-postgresql-database-engine.md", "url": "https://mgasca.github.io/calendar/adr/0014/", "note": "Only the SQLite fallback is withdrawn; the PostgreSQL conventions (roles, timestamptz, ranges) still stand." },
       { "id": "ADR-0015", "title": "EF Core 10 with code-first migrations for data access", "status": "accepted", "file": "docs/decisions/0015-ef-core-data-access.md", "url": "https://mgasca.github.io/calendar/adr/0015/" },
       { "id": "ADR-0016", "title": "Docker Compose for local databases and Testcontainers for tests; adopt .NET Aspire later", "status": "accepted", "file": "docs/decisions/0016-local-database-provisioning.md", "url": "https://mgasca.github.io/calendar/adr/0016/" },
-      { "id": "ADR-0017", "title": ".NET 10 file-based apps for all repo tooling scripts", "status": "accepted", "file": "docs/decisions/0017-dotnet-file-based-apps-for-repo-tooling.md", "url": "https://mgasca.github.io/calendar/adr/0017/" },
+      { "id": "ADR-0017", "title": ".NET 10 file-based apps for all repo tooling scripts, in their skill folder or tools/<name>/", "status": "accepted", "file": "docs/decisions/0017-dotnet-file-based-apps-for-repo-tooling.md", "url": "https://mgasca.github.io/calendar/adr/0017/" },
       { "id": "ADR-0018", "title": "UTC instants plus an IANA zone id and floating dates, using BCL time types instead of NodaTime", "status": "accepted", "file": "docs/decisions/0018-time-representation-and-bcl-date-time-types.md", "url": "https://mgasca.github.io/calendar/adr/0018/" },
-      { "id": "ADR-0019", "title": "Single-user mode with authentication deferred", "status": "superseded", "superseded-by": "ADR-0027", "file": "docs/decisions/0019-single-user-mode-with-authentication-deferred.md", "url": "https://mgasca.github.io/calendar/adr/0019/" },
+      { "id": "ADR-0019", "title": "Single-user mode with authentication deferred: no auth and no owner column yet", "status": "superseded", "superseded-by": "ADR-0027", "file": "docs/decisions/0019-single-user-mode-with-authentication-deferred.md", "url": "https://mgasca.github.io/calendar/adr/0019/" },
       { "id": "ADR-0020", "title": "A dedicated day-agenda endpoint as the read model, beside resource endpoints for writes", "status": "accepted", "file": "docs/decisions/0020-aggregate-day-agenda-endpoint-as-read-model.md", "url": "https://mgasca.github.io/calendar/adr/0020/" },
       { "id": "ADR-0021", "title": "The client's IANA time zone and local date define \"today\", with the server computing the day window", "status": "accepted", "file": "docs/decisions/0021-client-supplied-date-and-time-zone-define-the-day.md", "url": "https://mgasca.github.io/calendar/adr/0021/" },
       { "id": "ADR-0022", "title": "Astro and Starlight for the developer documentation UI", "status": "accepted", "file": "docs/decisions/0022-astro-starlight-documentation-ui.md", "url": "https://mgasca.github.io/calendar/adr/0022/" },
