@@ -90,7 +90,7 @@
 
 
 
-<table><thead><tr><th>Interface</th><th>Details</th></tr></thead><tbody><tr><td><code>web-app-origin</code></td><td><strong>url</strong>: https://<container-app>.azurecontainerapps.io/; <strong>description</strong>: Same origin as the API; in development Vite proxies /api to <a href="http://localhost:5041">http://localhost:5041</a>. Under just frontend dev-signed-in the proxy adds the Development-only X-Dev-Seed-Key to every /api request, only towards a loopback API, so the browser is signed in without Google and never sees the key (ADR-0027 amendment, story 0021)</container-app></td></tr><tr><td><code>web-app-routes</code></td><td><strong>routes</strong>: /, /day/$date, /week, /week/$weekStart, /tasks, /triage, /signin</td></tr></tbody></table>
+<table><thead><tr><th>Interface</th><th>Details</th></tr></thead><tbody><tr><td><code>web-app-origin</code></td><td><strong>url</strong>: https://<container-app>.azurecontainerapps.io/; <strong>description</strong>: Same origin as the API; in development Vite proxies /api to <a href="http://localhost:5041">http://localhost:5041</a>. Under just frontend dev-signed-in the proxy adds the Development-only X-Dev-Seed-Key to /api requests from the app’s own origin only (Sec-Fetch-Site and Origin checked), only towards a loopback API, so the browser is signed in without Google and never sees the key (ADR-0027 amendment, story 0021)</container-app></td></tr><tr><td><code>web-app-routes</code></td><td><strong>routes</strong>: /, /day/$date, /week, /week/$weekStart, /tasks, /triage, /signin</td></tr></tbody></table>
 <h2 id="relationships">Relationships</h2>
 
 
