@@ -1,0 +1,1 @@
+import{n as e}from"./chunk-AMVFOWMQ.Bv40BDJ-.js";import{r as t}from"./mermaid-layout-elk.core.D0WDy427.js";function n(e,t){e.accDescr&&t.setAccDescription?.(e.accDescr),e.accTitle&&t.setAccTitle?.(e.accTitle),e.title&&t.setDiagramTitle?.(e.title)}t(n,`populateCommonDb`),e(n,`populateCommonDb`);export{n as t};
