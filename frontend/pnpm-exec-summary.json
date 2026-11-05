@@ -1,0 +1,12 @@
+{
+  "executionStatus": {
+    "/home/mgasc/dev/mj-exploration/calm-the-calendar-1/.claude/worktrees/unruffled-bassi-395a45/frontend/apps/web": {
+      "status": "passed",
+      "duration": 4283.283372
+    },
+    "/home/mgasc/dev/mj-exploration/calm-the-calendar-1/.claude/worktrees/unruffled-bassi-395a45/frontend/packages/api-client": {
+      "status": "passed",
+      "duration": 1298.79953
+    }
+  }
+}
