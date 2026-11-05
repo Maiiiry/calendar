@@ -78,9 +78,8 @@
 <li><strong>D1 Consistency</strong>: both dialogs, and any later form, must validate and show errors the same way, so the two cannot drift apart again.</li>
 <li><strong>D2 Polish</strong>: the owner prefers the compact look of the browser bubble, where the message appears beside the field and nothing in the layout moves; the result should look finished in both colour schemes.</li>
 <li><strong>D3 Accessibility</strong>: every error must reach keyboard, touch and screen-reader users (WCAG 3.3.1 error identification), not only pointer users who hover.</li>
-<li><strong>D4 All problems visible</strong>: when several fields fail, the user should see every one at once, and cross-field rules such as “end after start” must be expressible.</li>
-<li><strong>D5 Browser independence</strong>: the look and behaviour must be the same in Chrome, Firefox and Safari and follow the app’s theme, rather than each browser’s native styling.</li>
-<li><strong>D6 Effort and maintenance</strong>: one shared field component and a few CSS rules, with no form library and no change to the API or the contract.</li>
+<li><strong>D4 Browser independence</strong>: the look and behaviour must be the same in Chrome, Firefox and Safari and follow the app’s theme, rather than each browser’s native styling.</li>
+<li><strong>D5 All problems visible</strong>: when several fields fail, the user should see every one at once, and cross-field rules such as “end after start” must be expressible.</li>
 </ul>
 <h2 id="considered-options">Considered Options</h2>
 <ul>
@@ -91,7 +90,7 @@
 <li>Red borders plus a bubble shown on focus or hover</li>
 </ul>
 <h2 id="decision-outcome">Decision Outcome</h2>
-<p>Chosen option: “Red borders plus a bubble shown on focus or hover”, because it is the only option that keeps the compact bubble the owner prefers (D2) while marking every invalid field at once (D4), working the same in every browser (D5) and keeping the message in the accessibility tree whether or not the bubble is visible (D3). The product owner reviewed mock-ups of the last three options, built with the app’s own stylesheet, and chose this combination in a conversation outside GitHub; the answer is recorded on <a href="https://github.com/mgasca/calendar/issues/262">issue #262</a>.</p>
+<p>Chosen option: “Red borders plus a bubble shown on focus or hover”, because it is the only option that keeps the compact bubble the owner prefers (D2) while marking every invalid field at once (D5), working the same in every browser (D4) and keeping the message in the accessibility tree whether or not the bubble is visible (D3). The product owner reviewed mock-ups of the last three options, built with the app’s own stylesheet, and chose this combination in a conversation outside GitHub; the answer is recorded on <a href="https://github.com/mgasca/calendar/issues/262">issue #262</a>.</p>
 
 
 
@@ -145,15 +144,7 @@
 
 
 
-
-
-
-
-
-
-
-
-<table><thead><tr><th>Driver</th><th align="center"><strong>Red borders plus a bubble (chosen)</strong></th><th align="center">Native browser validation</th><th align="center">Plain inline text</th><th align="center">Styled inline text</th><th align="center">Styled inline text plus summary</th></tr></thead><tbody><tr><td>D1 Consistency</td><td align="center">★★★</td><td align="center">★☆☆</td><td align="center">★★★</td><td align="center">★★★</td><td align="center">★★★</td></tr><tr><td>D2 Polish</td><td align="center">★★★</td><td align="center">★★☆</td><td align="center">☆☆☆</td><td align="center">★★☆</td><td align="center">★☆☆</td></tr><tr><td>D3 Accessibility</td><td align="center">★★☆</td><td align="center">★☆☆</td><td align="center">★★★</td><td align="center">★★★</td><td align="center">★★★</td></tr><tr><td>D4 All problems visible</td><td align="center">★★☆</td><td align="center">☆☆☆</td><td align="center">★★★</td><td align="center">★★★</td><td align="center">★★★</td></tr><tr><td>D5 Browser independence</td><td align="center">★★★</td><td align="center">☆☆☆</td><td align="center">★★★</td><td align="center">★★★</td><td align="center">★★★</td></tr><tr><td>D6 Effort and maintenance</td><td align="center">★★☆</td><td align="center">★★☆</td><td align="center">★★☆</td><td align="center">★★☆</td><td align="center">★☆☆</td></tr></tbody></table>
+<table><thead><tr><th>Driver</th><th align="center"><strong>Red borders plus a bubble (chosen)</strong></th><th align="center">Native browser validation</th><th align="center">Plain inline text</th><th align="center">Styled inline text</th><th align="center">Styled inline text plus summary</th></tr></thead><tbody><tr><td>D1 Consistency</td><td align="center">★★★</td><td align="center">★☆☆</td><td align="center">★★★</td><td align="center">★★★</td><td align="center">★★★</td></tr><tr><td>D2 Polish</td><td align="center">★★★</td><td align="center">★★☆</td><td align="center">☆☆☆</td><td align="center">★★☆</td><td align="center">★☆☆</td></tr><tr><td>D3 Accessibility</td><td align="center">★★☆</td><td align="center">★☆☆</td><td align="center">★★★</td><td align="center">★★★</td><td align="center">★★★</td></tr><tr><td>D4 Browser independence</td><td align="center">★★★</td><td align="center">☆☆☆</td><td align="center">★★★</td><td align="center">★★★</td><td align="center">★★★</td></tr><tr><td>D5 All problems visible</td><td align="center">★★☆</td><td align="center">☆☆☆</td><td align="center">★★★</td><td align="center">★★★</td><td align="center">★★★</td></tr></tbody></table>
 <h3 id="the-style">The style</h3>
 <ul>
 <li><strong>Mechanism:</strong> every form sets <code>noValidate</code> and runs its own <code>validate()</code> on submit, returning one message per failing field plus an optional form-level message. No field keeps a native check (<code>required</code>, <code>min</code>, <code>max</code>), so the browser never shows its own bubble. Messages keep their current wording (“Enter a title.”, “End must be after the start.”, “This local time does not exist. Choose another time.”).</li>
@@ -182,44 +173,39 @@
 <h3 id="native-browser-validation-everywhere">Native browser validation everywhere</h3>
 <ul>
 <li>Good, because <strong>D2 Polish</strong>: the browser draws a bubble that looks finished, with no CSS of our own.</li>
-<li>Good, because <strong>D6 Effort and maintenance</strong>: a <code>required</code> attribute per field is all the presence checks need.</li>
 <li>Bad, because <strong>D1 Consistency</strong>: cross-field rules and daylight-saving checks still need custom messages, so two styles coexist inside one form, which is the problem today.</li>
 <li>Bad, because <strong>D3 Accessibility</strong>: the bubble disappears after a few seconds or on any click, and screen readers announce it inconsistently.</li>
-<li>Bad, because <strong>D4 All problems visible</strong>: the browser reports one field at a time.</li>
-<li>Bad, because <strong>D5 Browser independence</strong>: the bubble’s look differs per browser and cannot be themed; Firefox and Safari show something different from Chrome.</li>
+<li>Bad, because <strong>D5 All problems visible</strong>: the browser reports one field at a time.</li>
+<li>Bad, because <strong>D4 Browser independence</strong>: the bubble’s look differs per browser and cannot be themed; Firefox and Safari show something different from Chrome.</li>
 </ul>
 <h3 id="plain-inline-text-everywhere">Plain inline text everywhere</h3>
 <ul>
 <li>Good, because <strong>D1 Consistency</strong>: one mechanism in both forms.</li>
 <li>Good, because <strong>D3 Accessibility</strong>: the text is in the page, linked to the control, and visible to everyone.</li>
-<li>Good, because <strong>D4 All problems visible</strong>: every failing field shows its message at once.</li>
-<li>Good, because <strong>D5 Browser independence</strong>: plain text renders the same everywhere.</li>
+<li>Good, because <strong>D5 All problems visible</strong>: every failing field shows its message at once.</li>
+<li>Good, because <strong>D4 Browser independence</strong>: plain text renders the same everywhere.</li>
 <li>Bad, because <strong>D2 Polish</strong>: body text in the default colour under the field, with nothing marking the field itself and no focus move, looks unfinished; the owner rejected it on the screenshot.</li>
-<li>Neutral, because <strong>D6 Effort and maintenance</strong>: the event form has it already; the task form must still migrate.</li>
 </ul>
 <h3 id="styled-inline-text-under-each-field">Styled inline text under each field</h3>
 <ul>
-<li>Good, because <strong>D1 Consistency</strong>, <strong>D3 Accessibility</strong>, <strong>D4 All problems visible</strong> and <strong>D5 Browser independence</strong>: the same mechanics as plain inline text, with the field marked and focus moved to the first problem.</li>
+<li>Good, because <strong>D1 Consistency</strong>, <strong>D3 Accessibility</strong>, <strong>D4 Browser independence</strong> and <strong>D5 All problems visible</strong>: the same mechanics as plain inline text, with the field marked and focus moved to the first problem.</li>
 <li>Good, because <strong>D2 Polish</strong>: a red border, a red message with a warning mark and the focus move make it look deliberate.</li>
 <li>Bad, because <strong>D2 Polish</strong>: each message adds a line under its field, so the form grows and shifts when an error appears, which the owner did not want.</li>
-<li>Neutral, because <strong>D6 Effort and maintenance</strong>: a shared field component and two CSS rules, the same as the chosen option without the positioning.</li>
 </ul>
 <h3 id="styled-inline-text-plus-an-error-summary-at-the-top-of-the-form">Styled inline text plus an error summary at the top of the form</h3>
 <ul>
 <li>Good, because <strong>D3 Accessibility</strong>: a summary that lists every problem as a link to its field is the strongest pattern for screen-reader users on long forms.</li>
-<li>Good, because <strong>D1 Consistency</strong>, <strong>D4 All problems visible</strong> and <strong>D5 Browser independence</strong>: as for styled inline text.</li>
+<li>Good, because <strong>D1 Consistency</strong>, <strong>D4 Browser independence</strong> and <strong>D5 All problems visible</strong>: as for styled inline text.</li>
 <li>Bad, because <strong>D2 Polish</strong>: these dialogs have five to seven fields, so the summary repeats what is already visible and pushes the first field down.</li>
-<li>Bad, because <strong>D6 Effort and maintenance</strong>: the summary, its links and its focus management are extra code and tests for little gain on short forms.</li>
 </ul>
 <h3 id="red-borders-plus-a-bubble-shown-on-focus-or-hover">Red borders plus a bubble shown on focus or hover</h3>
 <ul>
 <li>Good, because <strong>D1 Consistency</strong>: one mechanism and one component for both forms.</li>
 <li>Good, because <strong>D2 Polish</strong>: the compact bubble the owner liked in the task form, now with the app’s colours, and nothing in the layout moves.</li>
-<li>Good, because <strong>D5 Browser independence</strong>: the bubble is ours, drawn from the theme tokens, identical in every browser and colour scheme.</li>
-<li>Good, because <strong>D4 All problems visible</strong>: every invalid field is bordered at once, and cross-field rules are ordinary messages.</li>
-<li>Bad, because <strong>D4 All problems visible</strong>: only one message is readable at a time.</li>
+<li>Good, because <strong>D4 Browser independence</strong>: the bubble is ours, drawn from the theme tokens, identical in every browser and colour scheme.</li>
+<li>Good, because <strong>D5 All problems visible</strong>: every invalid field is bordered at once, and cross-field rules are ordinary messages.</li>
+<li>Bad, because <strong>D5 All problems visible</strong>: only one message is readable at a time.</li>
 <li>Bad, because <strong>D3 Accessibility</strong>: a bubble shown on hover or focus must not be the only carrier of the message; the always-present accessible description and the focus move on submit cover keyboard, touch and screen-reader users, and that wiring has to be tested.</li>
-<li>Neutral, because <strong>D6 Effort and maintenance</strong>: the same shared component as styled inline text plus the positioning CSS and the overflow care noted above.</li>
 </ul>
 <h2 id="more-information">More Information</h2>
 <ul>
