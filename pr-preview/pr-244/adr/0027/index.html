@@ -163,7 +163,12 @@
 <p>This is needed because Vite’s default CORS policy lets any <code>localhost</code>, <code>127.0.0.1</code>, <code>[::1]</code> or <code>*.localhost</code> origin read <code>/api</code> responses. A key on every request would let any other local page act as the developer, and any internet site send simple requests with the key added.</p>
 </li>
 <li>
-<p><strong>Loopback target, valid key.</strong> In this mode the dev server refuses to start if <code>CALENDAR_API_URL</code> is not a loopback host (<code>localhost</code>, <code>127.0.0.1</code>, <code>::1</code>), or if the key is missing or shorter than the API’s 32-character minimum.</p>
+<p><strong>Loopback target, loopback listener, valid key.</strong> In this mode the dev server refuses to start in any of these cases:</p>
+<ul>
+<li><code>CALENDAR_API_URL</code> is not a loopback host (<code>localhost</code>, <code>127.0.0.1</code>, <code>::1</code>);</li>
+<li><code>vite</code> or <code>vite preview</code> would listen beyond loopback (<code>--host</code>, <code>server.host</code> or <code>preview.host</code> set to anything else; #242);</li>
+<li>the key is missing or shorter than the API’s 32-character minimum.</li>
+</ul>
 </li>
 <li>
 <p><strong>The API is unchanged.</strong> It still accepts the key only in Development, as the first allow-listed email’s user (<a href="/calendar/pr-preview/pr-244/adr/0041/">ADR-0041</a>), and Google stays the only sign-in in every other environment.</p>
@@ -174,11 +179,17 @@
 <li><strong>Measured on Vite 8.3.5, 2026-11-04, in a scratch directory with a throwaway upstream (not the repository):</strong> a <code>/api</code> proxy entry with <code>headers: { 'X-Dev-Seed-Key': … }</code> forwarded the header to the upstream, and its value replaced a different <code>X-Dev-Seed-Key</code> sent by the client.</li>
 <li><strong>Untested until delivery:</strong> the repository’s proxy, recipe and refusals, and the end-to-end sign-in. The acceptance criteria of story 0021 cover all of them.</li>
 <li><strong>Measured on Vite 8.3.5 and Chromium, 2026-11-04, during the review of PR #241:</strong> with that fixed <code>headers</code> entry, a page served from <code>http://127.0.0.1:55180</code> read <code>http://localhost:55173/api/auth/me</code> as <code>200</code> with the allow-listed email. With the same-origin rule above, the same request got <code>401</code>, and the app’s own page stayed signed in.</li>
+<li><strong>Measured on Vite 8.3.5, 2026-11-05, for #242:</strong>
+<ul>
+<li>Before the listener check, the real <code>vite.config.ts</code> started with dev sign-in on and <code>--host</code>.</li>
+<li>With the check, <code>CALENDAR_DEV_SIGN_IN=true pnpm dev --host</code> and <code>vite preview --host</code> exited before listening, and plain <code>pnpm dev --host</code> still listened on all interfaces.</li>
+</ul>
+</li>
 </ul>
 <p><strong>Consequences of the amendment</strong></p>
 <ul>
 <li>Good, because <strong>D3 Operational simplicity</strong>: trying the web app by hand no longer needs a Google OAuth client.</li>
-<li>Bad, because <strong>D1 Browser security</strong> in development: while the recipe runs, anyone who can reach the dev server is signed in as the first allow-listed email. Vite listens on localhost unless started with <code>--host</code>. Other pages in the developer’s browser are not signed in, because of the same-origin rule.</li>
+<li>Bad, because <strong>D1 Browser security</strong> in development: while the recipe runs, anyone who can reach the dev server is signed in as the first allow-listed email. In this mode the dev server refuses to listen beyond loopback, so that means local users and programs only. Other pages in the developer’s browser are not signed in, because of the same-origin rule.</li>
 <li>Bad, because the same-origin rule depends on browser-set headers (<code>Sec-Fetch-Site</code>, <code>Origin</code>). A local program that isn’t a browser, such as curl or a script run by another user on the same machine, sends neither header and gets the key. That is the “anyone who can reach the dev server” exposure in the bullet above.</li>
 <li>Bad, because <strong>Sign out</strong> cannot end the mode, since the next request carries the key again. Stopping the recipe signs out.</li>
 <li>Neutral, because the API, its contract, CORS and every non-Development environment do not change.</li>
