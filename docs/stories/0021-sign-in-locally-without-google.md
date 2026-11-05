@@ -5,6 +5,7 @@ issue: https://github.com/mgasca/calendar/issues/238
 pr:
   - https://github.com/mgasca/calendar/pull/239
   - https://github.com/mgasca/calendar/pull/241
+  - https://github.com/mgasca/calendar/pull/244
   - https://github.com/mgasca/calendar/pull/245
 adrs: ["0027", "0038", "0041"]
 ---
@@ -15,7 +16,7 @@ adrs: ["0027", "0038", "0041"]
 
 > As a developer running the app on my own machine, I need to open the web app in my browser already signed in, without a Google OAuth client, so that I can try a change by hand without setting up real credentials.
 
-Tracked in issue #238. Card PR: [#239](https://github.com/mgasca/calendar/pull/239); delivery PR: [#241](https://github.com/mgasca/calendar/pull/241); follow-up for #242: [#245](https://github.com/mgasca/calendar/pull/245).
+Tracked in issue #238. Card PR: [#239](https://github.com/mgasca/calendar/pull/239); delivery PR: [#241](https://github.com/mgasca/calendar/pull/241); follow-ups: [#245](https://github.com/mgasca/calendar/pull/245) for #242 and [#244](https://github.com/mgasca/calendar/pull/244) for #243.
 
 ## Background
 
@@ -58,6 +59,8 @@ Measured on Vite 8.3.5 (2026-11-04, in a scratch directory with a throwaway upst
 5. **Given** the mode is on, **when** the page runs, **then** the key is never in anything served to the browser: it is added only between the dev server and the API. Not directly tested. Checked by hand on 2026-11-04: the key did not appear in `/`, `/src/main.tsx`, `/src/App.tsx`, `/@vite/client`, `/@vite/env`, `/src/features/auth/auth.ts`, `/src/api/client.ts`, or the `/api/auth/me` response headers. Vite exposes only `VITE_`-prefixed variables to the page, and the key isn't one.
 6. **Given** `Auth__AllowedEmails__0` is unset, **when** I start the recipe, **then** it warns that the API will reject the key. Checked by hand through the recipe; there is no automated test for recipes.
 7. **Given** the mode is on, **when** a page from another origin calls the dev server's `/api` (another local port, `127.0.0.1` instead of `localhost`, `*.localhost`, an internet site, or a `same-site` or `cross-site` request), **then** the API receives no key and answers 401, even if that page sent a key of its own. Added after the security review of #241 (finding 1). Tested by "sends no key for …" (dev server) and the `isSameOriginRequest` cases.
+   * End to end in Chromium on 2026-11-04: a page on `127.0.0.1:55180` got 401 from `localhost:5173/api/auth/me` and `/api/tasks`, while the app's own page stayed signed in.
+   * Against the pre-fix proxy, the same page read `/api/auth/me` as 200 with the allow-listed email.
 8. **Given** the mode is on, **when** `vite` or `vite preview` is asked to listen beyond loopback (`--host`, `--host 0.0.0.0`, `--host ::`, a LAN address or name, `server.host`, `preview.host`, or a `server.host` that `vite preview` inherits), **then** it refuses to start before it listens, with a message naming the setting. Plain `just frontend dev --host` is unaffected. Added for #242 (finding 2 of the security review of #241). Tested in [`devSignInHostGuard.test.ts`](../../frontend/apps/web/dev/devSignInHostGuard.test.ts):
    * "stops the dev server on host …", "stops vite preview on host …" and "stops vite preview when it inherits a non-loopback server.host";
    * "lets … start on host …" for the loopback hosts and the default;
@@ -68,8 +71,7 @@ Measured on Vite 8.3.5 (2026-11-04, in a scratch directory with a throwaway upst
    * `CALENDAR_DEV_SIGN_IN=true pnpm dev --host` and `vite preview --host` exited 1 with the message, and nothing listened on 5173 or 4173;
    * `just frontend dev-signed-in` listened on `127.0.0.1:5173`;
    * plain `pnpm dev --host` listened on `*:5173`.
-   * End to end in Chromium on 2026-11-04: a page on `127.0.0.1:55180` got 401 from `localhost:5173/api/auth/me` and `/api/tasks`, while the app's own page stayed signed in.
-   * Against the pre-fix proxy, the same page read `/api/auth/me` as 200 with the allow-listed email.
+9. **Given** the mode is on, **when** `Auth__DevSeedKey` is still the public placeholder from `.env.example`, **then** the dev server warns that anyone who can reach the API can act as my account and tells me to replace it with `openssl rand -hex 32`, and still starts. Added for [#243](https://github.com/mgasca/calendar/issues/243) (security review of #241, finding 3). Tested by "warns, but still signs in, when the key is the public placeholder from .env.example" and "does not warn about a generated key, or when dev sign-in is off"; "knows the placeholder that .env.example commits" keeps the check in step with `.env.example`.
 
 ## Design decisions
 
@@ -98,7 +100,7 @@ The amendment to ADR-0027 keeps the decision and its ratings. It widens only who
 
 | Area | Location |
 | --- | --- |
-| Proxy options, refusals, the same-origin rule and the loopback host guard | `frontend/apps/web/dev/apiProxy.ts` (`apiProxy(env)`, `isSameOriginRequest(headers)`, `devSignInHostGuard(env)`) |
+| Proxy options, refusals, the placeholder warning, the same-origin rule and the loopback host guard | `frontend/apps/web/dev/apiProxy.ts` (`apiProxy(env)`, `isSameOriginRequest(headers)`, `devSignInHostGuard(env)`) |
 | Wiring | `frontend/apps/web/vite.config.ts` (`server.proxy['/api']`, and the guard in `plugins`); `tsconfig.node.json` type-checks `dev/` |
 | Recipe | `frontend/mod.just` (`dev-signed-in`) |
 | Tests | `frontend/apps/web/dev/apiProxy.test.ts` and `devSignInHostGuard.test.ts`, in the Vitest project `dev-server` |
@@ -110,8 +112,8 @@ No changes. The API's seed scheme, its Development-only switch and `contracts/op
 
 ### Testing
 
-* `apiProxy.test.ts` has 40 tests.
-  * Unit tests cover the options, every refusal, and `isSameOriginRequest` on 14 header combinations.
+* `apiProxy.test.ts` has 44 tests.
+  * Unit tests cover the options, every refusal, the placeholder warning (and that it matches `.env.example`), and `isSameOriginRequest` on 14 header combinations.
   * Dev-server tests start a real Vite dev server (`createServer`) that proxies to a throwaway Node HTTP server. They send requests with `node:http`, so `Origin` and `Sec-Fetch-Site` go out exactly as given. They check the key the API actually receives:
     * added for no page and for the dev server's own page;
     * replacing a client's key;
@@ -137,7 +139,7 @@ No changes. The API's seed scheme, its Development-only switch and `contracts/op
 * **A fixed proxy header signs in every page, not just the app.** The first version used `headers: { 'X-Dev-Seed-Key': … }`. Vite 8.3.5's default `server.cors` allows any localhost origin and runs before the proxy. So any other local page in the same browser could read and change the developer's calendar, and the PR's tests didn't catch it because they sent no `Origin`. The security review of #241 found it. Tests for a credential the proxy adds should include a foreign `Origin` and `Sec-Fetch-Site`.
 * **Measured:** Vite 8.3.5 proxies with http-proxy-3. Removing and setting the header in `proxyReq` replaces a client's key. A Vite upgrade that changes this fails "replaces a key the client sends with the proxy's" or "sends no key for another origin sending a key of its own".
 * **Fixed after delivery:** finding 2 of the security review of #241 was that nothing in code limited the mode to loopback under `vite --host` or `vite preview`, so only the recipe's lack of arguments protected it. Fixed for #242 by the guard plugin (criterion 8). Vite runs `configureServer` and `configurePreviewServer` before it listens, so a refusal there exposes nothing, even briefly. `preview.host` and `preview.proxy` fall back to the `server` values (checked in the Vite 8.3.5 source), which is why preview needs the same guard.
-* **Not fixed here (security review of #241, finding 3, low):** the README and the user guide below say the placeholder `Auth__DevSeedKey` from `.env.example` is "already there", rather than telling you to replace it with `openssl rand -hex 32`. Tracked in #243.
+* **Fixed after delivery (security review of #241, finding 3, low; #243):** the README and the user guide said the placeholder `Auth__DevSeedKey` from `.env.example` was "already there". Anyone who can reach `localhost:5041` can read that public value and act as your account in Development. Both now tell you to replace it with `openssl rand -hex 32`, and the recipe warns while the placeholder is still in `.env` (criterion 9). A warning rather than a refusal, because the API accepts the placeholder anyway under `just backend dev`. The `run-calendar` throwaway stack keeps the placeholder: its only allow-listed email is `dev-seed@example.com`.
 * **Known limitation:** **Sign out** clears the cookie, but the next request carries the key again, so the mode can't be left from the UI. Stop the recipe instead.
 * **Known limitation:** the recipe prints its "Dev sign-in" line before Vite checks the key, so a refused start shows that line followed by the error.
 * **Security note:** while the recipe runs, anything that can reach the dev server without browser headers (curl, a script, another local user) is signed in. In this mode Vite refuses to listen beyond loopback (criterion 8), so that means this machine only. Other pages in your browser are not signed in.
@@ -146,11 +148,11 @@ No changes. The API's seed scheme, its Development-only switch and `contracts/op
 
 ### Open the app signed in, without Google
 
-1. Make sure `.env` has `Auth__DevSeedKey` (it does if you copied `.env.example`) and add your email as `Auth__AllowedEmails__0`.
+1. In `.env`, replace the placeholder `Auth__DevSeedKey` with the output of `openssl rand -hex 32` (the one copied from `.env.example` is public), and add your email as `Auth__AllowedEmails__0`.
 2. Start the database and the API as usual (`just db up`, `just db migrate`, `just backend dev`).
 3. Start the web app with `just frontend dev-signed-in` instead of `just frontend dev`.
 4. Open http://localhost:5173. You land on **Today**, signed in as that email. The menu shows **dev-seed** as your name.
 
-If the recipe stops with an error, it names what to fix: a missing `Auth__DevSeedKey`, a key shorter than 32 characters, or a `CALENDAR_API_URL` that isn't on this machine. If the app shows the sign-in page instead, check that `Auth__AllowedEmails__0` is set and that the API was restarted after you set it.
+If the recipe stops with an error, it names what to fix: a missing `Auth__DevSeedKey`, a key shorter than 32 characters, or a `CALENDAR_API_URL` that isn't on this machine, or a `--host` beyond this machine. If it warns that `Auth__DevSeedKey` is still the placeholder, replace it as in step 1 and restart both the API and the recipe. If the app shows the sign-in page instead, check that `Auth__AllowedEmails__0` is set and that the API was restarted after you set it.
 
 Known limitation: **Sign out** cannot end this mode, because the dev server signs every request in again. To sign out, stop the recipe and start plain `just frontend dev`.
