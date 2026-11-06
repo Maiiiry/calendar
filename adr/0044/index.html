@@ -79,7 +79,7 @@
 <li>Scheduled work stays cross-harness. It is scheduled and run in mj on a non-Claude harness, and the epic and child issues its reports lead to are created there too.</li>
 <li>Epics and single issues are managed and delivered mostly in Claude Code.</li>
 </ul>
-<p>So “Claude Code only” in this record applies to the delivery side, the automation that runs where epics and issues are delivered. The skills that scheduled work runs are read by a non-Claude harness too, and their prose stays harness-neutral.</p>
+<p>“Claude Code only” in this record is aimed at the delivery side, the automation that runs where epics and issues are delivered. Whether the skills that scheduled work runs, which a non-Claude harness reads too, must stay harness-neutral is an open question the maintainer deferred on <a href="https://github.com/mgasca/calendar/pull/366#issuecomment-6692829765">#366</a>; it is not decided here.</p>
 <h2 id="decision-drivers">Decision Drivers</h2>
 <ul>
 <li><strong>D1 Native capability</strong>: new automation can use Claude Code mechanisms directly (hooks that deny, ask or inform; loops and routines; workflows; subagents) instead of the subset that has a portable equivalent.</li>
