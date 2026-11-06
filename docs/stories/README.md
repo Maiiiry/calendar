@@ -50,4 +50,5 @@ Front matter: `status` (`planned`, `in-progress` or `implemented`), `date` (`YYY
 | [0026](0026-read-module-recipe-chains-with-run.md) | Read module recipe chains with run | implemented |
 | [0028](0028-coordinate-epic-delivery-across-agent-sessions.md) | Coordinate epic delivery across agent sessions | implemented |
 | [0029](0029-preserve-independent-perspectives-on-our-work.md) | Preserve independent perspectives on our work | planned |
+| [0030](0030-docs-only-pr-previews.md) | Publish a docs-site preview only for docs-only pull requests | planned |
 | [XXXX](XXXX-create-events-and-tasks-from-week-view.md) | Create events and tasks from the week view | planned |
