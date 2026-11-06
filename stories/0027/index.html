@@ -86,7 +86,7 @@
 <li><strong>Scheduled work stays cross-harness.</strong> Sweeps and other routines are scheduled and run in mj on a non-Claude harness, and the epics and child issues their reports lead to are created there too.</li>
 <li><strong>Delivery happens mostly in Claude Code.</strong> Epics and single issues are managed and delivered there, which is where the Claude-first automation of <a href="/calendar/adr/0044/">ADR-0044</a> runs.</li>
 </ul>
-<p>So the skills that scheduled work runs, such as <code>dream-weaver</code>, <code>issue-sweep</code> and <code>adr-sweep</code>, are still read by a non-Claude harness and stay in harness-neutral prose. The delivery skills and hooks may be Claude Code only.</p>
+<p>So the skills that scheduled work runs, such as <code>dream-weaver</code>, <code>issue-sweep</code> and <code>adr-sweep</code>, are still read by a non-Claude harness and stay in harness-neutral prose. The delivery skills and hooks may be Claude Code only. Which skills that rule covers is deferred: the maintainer deferred the list on <a href="https://github.com/mgasca/calendar/pull/366#issuecomment-6692829765">#366</a>.</p>
 <p>The <code>issue-handover</code> skill shows the cost. It has grown to cover polling cadence, a seen-ID record, public-post rules a hook already enforces, screenshots, performance evidence, reopened decisions and local operations, all stated as prose that loads on every handover turn, including a poll that finds nothing. Each part has a better home once Claude Code is the target: the harness for timing, a repo tool for mechanics, a hook for invariants, and reference documents for conventions people read too. Epic #318 holds those moves as children; this card is the story they deliver, and the record of what the Claude-first period teaches.</p>
 <p>This story builds on <a href="/calendar/stories/0020/">0020</a>, which created the layers, and on <a href="/calendar/stories/0025/">0025</a>, whose first run last extended the handover skill (#292). Like those, its user is the maintainer who works through agents, not the calendar’s end user.</p>
 <h3 id="agreed-scope">Agreed scope</h3>
@@ -266,7 +266,7 @@
 <li><strong>Cost, measured on #360 and not yet paid off:</strong> a tick of the watch makes 2 + 3N REST calls for N delivery PRs. #363 proposes one GraphQL query.</li>
 </ul>
 <h3 id="has-the-period-ended">Has the period ended?</h3>
-<p>No. The maintainer has not stated an end to the Claude-first period as of this PR, so ADR-0044 stands. Ending it is a new ADR.</p>
+<p>No. The maintainer has not stated an end to the Claude-first period, so ADR-0044 stands. The maintainer will say when it ends (<a href="https://github.com/mgasca/calendar/pull/366#issuecomment-6692824098">#366</a>), and ending it is a new ADR.</p>
 <h3 id="lessons-learned-known-issues-and-follow-ups">Lessons learned, known issues and follow-ups</h3>
 <ul>
 <li><strong>An ADR merged while <code>proposed</code>, again.</strong> #324 merged with ADR-0044 still <code>proposed</code>, the pattern <code>adr-draft</code> warns about from ADRs 0014–0016. #354 fixed it as a separate docs PR before any child relied on it. Accepting in the card PR itself, when the maintainer approves it there, saves that PR.</li>
@@ -274,9 +274,9 @@
 <li><strong>The maintainer updates branches from GitHub.</strong> #356 got a GitHub “Update branch” merge right after its stacked base, #354, merged. Fetching and merging the remote head before the push, as the skill says, kept both.</li>
 <li><strong>A guidance claim was untrue.</strong> The root <code>AGENTS.md</code> said <code>.plan/</code> was git-ignored, but it was not until #360 added it.</li>
 <li><strong>The watch interval changed from 60 s to 5 minutes</strong>, approved on #319. Ticks that find nothing were the common case, and each one costs a turn.</li>
-<li><strong>A slow-machine flake:</strong> once, under a load average of about 8, the docs build’s link test hit its 5 s timeout and then passed on a rerun (#356). This was seen once and not filed.</li>
+<li><strong>The docs build’s link test is close to its timeout locally.</strong> <code>tests/build.test.ts</code> “resolves every internal link and anchor” uses Vitest’s default 5 s timeout. It hit that timeout once on #356, at a load average of about 8, and twice more on #366 at about 2.7. Run alone with a 60 s timeout it passed in 12.2 s over 129 pages (measured), so it is slow rather than flaky; CI has not hit it. It is not filed.</li>
 <li><strong>Known gap:</strong> the PreToolUse note of #358 has not been seen live. The first session that runs <code>gh pr create</code> with such a body on the new <code>main</code> can confirm it.</li>
-<li><strong>Not filed:</strong> the public-post guard does not scan the stdin of <code>gh api --input -</code>. This predates the epic and was found while delivering #321.</li>
+<li><strong>Filed outside the epic:</strong> the public-post guard does not read the body of <code>gh api --input</code>, a file or stdin (<a href="https://github.com/mgasca/calendar/issues/369">#369</a>, <code>bug</code>, <code>agent-found</code>). This predates the epic and was found while delivering #321.</li>
 <li><strong>Follow-ups:</strong> #363 (one GraphQL query per watch tick). The saved Claude Code workflows deferred on #318 (close-out checks across a stack, review bursts, the issue sweep) can now call the tool and the hook.</li>
 </ul>
 <h2 id="user-guide">User guide</h2>
