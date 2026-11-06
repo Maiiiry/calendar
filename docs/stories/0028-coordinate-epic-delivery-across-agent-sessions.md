@@ -1,9 +1,10 @@
 ---
-status: planned
+status: implemented
 date: 2026-11-06
 issue: https://github.com/mgasca/calendar/issues/325
 pr:
   - https://github.com/mgasca/calendar/pull/326
+  - https://github.com/mgasca/calendar/pull/327
 adrs: ["0042"]
 ---
 
@@ -25,6 +26,7 @@ The maintainer also clarified that they intentionally used GitHub's native stack
 
 * **Active coordination:** launch and steer independent delivery sessions and maintain issue/PR tracking within the accepted epic scope. The maintainer approves scope changes and performs merges.
 * **Work grouping:** use file overlap, dependencies and existing workers to assign ownership; do not fix the number at five or start duplicate workers.
+* **Visible dependencies:** publish and maintain a Mermaid dependency map on the epic issue. When there are multiple dependent delivery paths, highlight the critical path with bold arrows, including ties; explain duration estimates or label an equal-duration longest-chain assumption as provisional. Added by maintainer review on PR #327.
 * **Shared instructions:** one repository skill and refined prompt usable by Claude Code and Codex/Mjolnir, with capability checks and honest reporting when a launch or watch requires user action.
 * **Actionable notifications:** reconcile every five minutes; notify only for maintainer actions or significant milestones, in Item / Change / State / Action tables. Keep unchanged reminders quiet.
 * **Native stack awareness:** distinguish native stacks from ordinary branch chains, recognise intentional top-of-stack group merges, assess current checks in trunk context, and verify final content and issue bookkeeping before diagnosing a gap.
@@ -46,7 +48,10 @@ The maintainer also clarified that they intentionally used GitHub's native stack
 5. **Given** a new PR head without checks, **when** the previous head was green, **then** the new head remains pending until its applicable checks are verified.
 6. **Given** completed epic requirements, checks, tracking and story evidence, **when** related follow-up issues remain open outside scope, **then** the coordinator reports them separately and stops the epic watch with an explicit Remaining line.
 7. **Given** the skill package, **when** its instructions and refined prompt are validated, **then** its references resolve and its behaviour is consistent across the supported agent environments without assuming unavailable tools.
-8. **Given** the change is complete, **when** I run `just check`, **then** it passes.
+8. **Given** an epic with multiple dependent delivery paths, **when** the coordinator publishes its dependency map, **then** the epic issue contains a Mermaid flowchart with bold critical-path arrows and an explicit estimate basis or provisional equal-duration assumption.
+9. **Given** the change is complete, **when** I run `just check`, **then** it passes.
+
+Criteria 1 and 7 were checked by reading the [skill](../../.claude/skills/epic-delivery/SKILL.md) and [refined prompt](../../.claude/skills/epic-delivery/references/coordinator-prompt.md), validating the skill package and resolving its two local references. Criteria 2–6 were exercised in an independent read-only scenario evaluation: a stopped worker with a conflicting PR, a new head without checks, a native top-of-stack merge followed by stale issue tracking, and completed epic work with an unrelated follow-up. The evaluator correctly steered the existing worker, kept pending CI quiet, waited for stack reconciliation, and stopped the completed epic's watch. This was simulated decision testing, not live orchestration or an actual stack merge. Criterion 8's diagram instructions are checked by source review and a read-only dependency-map scenario; no live epic issue is edited during that evaluation. Criterion 9's final-revision results are recorded in the delivery PR; targeted skill checks alone do not establish it.
 
 ## Design decisions
 
@@ -66,8 +71,6 @@ No new ADR is expected. The user explicitly requested support for Claude Code an
 
 ## Implementation notes
 
-*Planned. This section is completed as the story is built.*
-
 ### Where things live
 
 | Area | Location |
@@ -82,14 +85,15 @@ No changes.
 
 ### Testing
 
-Validate the skill package and references; use read-only scenarios for native stack merge events, a stopped worker, new-head CI and completion with an unrelated follow-up. Run docs corpus and publication checks for this card. Distinguish simulated decisions from actual live orchestration and native stack merges.
+The skill-creator package validator passed. Independent scenario testing used the committed skill and its references without parent-conversation guidance or external mutations. The original transcript and the maintainer's explicit choices informed the skill; current GitHub documentation supports the [stack reference](../../.claude/skills/epic-delivery/references/stacked-prs.md). Docs corpus/publication checks and the repository acceptance check are recorded for the final delivery revision in its PR. No persistent watch, real worker session, GitHub stack merge or phone notification was exercised by these tests, and no automated orchestration harness was added.
 
 ### Lessons learned, known issues and follow-ups
 
-To be completed during delivery. Native GitHub stack support must be inspected rather than inferred from an immediate base branch.
+* The maintainer intentionally used native top-of-stack merging. The original monitor treated grouped events as accidental folding; the skill now waits for reconciliation and verifies trunk content before diagnosing a gap.
+* Native stacks evaluate protections and Actions against their trunk. A historical immediate base does not establish reduced CI; inspect the applicable check set on the current revision.
+* A stopped worker can usually be steered directly under the accepted authority. A launcher requiring a maintainer click must still be reported honestly, as must watch and notification gaps.
+* Related handover refactoring remains with #318. This skill neither introduces a new polling tool nor changes the existing protocol's rules.
 
 ## User guide
-
-*Planned behaviour. This section is finalised when the story is implemented.*
 
 Ask: **Use epic-delivery to coordinate &lt;epic URL&gt;.** The coordinator reads the epic and story, groups and steers workers, and reports decisions or milestones in tables. You approve scope changes and merge PRs, including native stack groups from the top. The coordinator verifies completion and stops; related unfinished work is listed separately.
