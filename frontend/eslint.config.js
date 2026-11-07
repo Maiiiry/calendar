@@ -92,3 +92,5 @@ export default defineConfig([
   },
   prettier,
 ]);
+
+# Automated fix for issue #429: Publish ADR site: deploy fails on an in-progress Pages deployment again (#285 symptom)
